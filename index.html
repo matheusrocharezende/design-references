@@ -342,15 +342,12 @@ const searchResults = document.getElementById('search-results');
 const searchClose   = document.getElementById('search-close');
 
 /* ── BUILD ROWS ── */
-/* Propagate the type label to every item in the same category */
-let currentType = '';
 LINKS.forEach((link, i) => {
-  if (link.type) currentType = link.type;
   const div = document.createElement('div');
   div.className = 'row';
   div.dataset.index = i;
   div.innerHTML =
-    `<span class="col-t">${currentType}</span>` +
+    `<span class="col-t">${link.type}</span>` +
     `<span class="col-n">${link.name}</span>`;
   div.addEventListener('click', () => window.open(link.url, '_blank', 'noopener'));
   rowsWrap.appendChild(div);
