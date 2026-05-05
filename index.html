@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>References — Matheus Rocha</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #141414;
+      --fg: #f0f0f0;
+      --muted: rgba(240, 240, 240, 0.38);
+      --border: rgba(240, 240, 240, 0.09);
+      --accent: #e63c2f;
+      --font: 'IBM Plex Mono', ui-monospace, monospace;
+    }
+
+    html {
+      background: var(--bg);
+      /* scroll-snap is OFF during the hero→preview transition;
+         JS adds .list-mode once the preview is fully open */
+    }
+
+    /* Snap only active in list mode */
+    html.list-mode { scroll-snap-type: y mandatory; }
+
+    body {
+      min-height: 100dvh;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior-y: none;
+    }
+
+    /* ── HERO ── */
+    #hero {
+      padding: 44px 24px 36px;
+      will-change: opacity, transform;
+      /* snap point at scrollTop = 0 — used for the return trip (list → hero) */
+      scroll-snap-align: start;
+    }
+
+    #hero h1 {
+      font-size: clamp(28px, 9.5vw, 42px);
+      font-weight: 700;
+      line-height: 0.98;
+      text-transform: uppercase;
+      letter-spacing: -0.025em;
+      margin-bottom: 22px;
+    }
+
+    #hero .byline {
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    #hero .byline .red { color: var(--accent); }
+
+    /* ── STICKY PANEL ── */
+    #sticky-top {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--bg);
+    }
+
+    /* ── PREVIEW ── */
+    #preview-wrap {
+      overflow: hidden;
+      height: 0; /* driven by JS */
+    }
+
+    #preview-inner {
+      padding: 14px 16px 8px;
+    }
+
+    #preview-frame {
+      width: 100%;
+      aspect-ratio: 16 / 9.8;
+      border-radius: 7px;
+      overflow: hidden;
+      background: #1e1e1e;
+      position: relative;
+    }
+
+    .pimg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      transition: opacity 0.4s ease;
+      will-change: opacity;
+    }
+    .pimg.off { opacity: 0; }
+    .pimg.on  { opacity: 1; }
+
+    #preview-frame::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg,
+        transparent 0%, rgba(255,255,255,0.035) 50%, transparent 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+    #preview-frame.loading::after { opacity: 1; }
+    @keyframes shimmer {
+      from { background-position: -200% 0; }
+      to   { background-position:  200% 0; }
+    }
+
+    #preview-label {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      padding: 6px 0 0;
+      height: 20px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ── TABLE HEADER ── */
+    #table-head {
+      display: flex;
+      align-items: center;
+      padding: 10px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .col-t { width: 82px; flex-shrink: 0; }
+    .col-n { flex: 1; }
+
+    #table-head .col-t,
+    #table-head .col-n {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    #search-btn {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #search-btn.show { opacity: 1; }
+
+    /* ── ROWS ──
+     * Each row is a snap point.
+     * scroll-margin-top is set by JS = stickyTop.offsetHeight,
+     * so snap position = row.offsetTop − stickyH = heroH + i×rowH (constant).
+     */
+    .row {
+      display: flex;
+      align-items: center;
+      padding: 11px 24px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      scroll-snap-align: start;
+      scroll-snap-stop: always; /* one item per swipe */
+    }
+
+    .row .col-t {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.03em;
+      width: 82px;
+      flex-shrink: 0;
+    }
+
+    .row .col-n {
+      font-size: 13px;
+      color: rgba(240, 240, 240, 0.5);
+      transition: color 0.18s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    .row.active .col-n {
+      color: var(--fg);
+      font-weight: 500;
+    }
+
+    /* spacer sized dynamically so last row can snap to first-visible position */
+    #spacer { height: 70dvh; }
+
+    /* ── SEARCH OVERLAY ── */
+    #search-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease;
+    }
+    #search-overlay.open { opacity: 1; pointer-events: all; }
+
+    #search-bar {
+      display: flex;
+      align-items: center;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+
+    #search-input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      font-family: var(--font);
+      font-size: 14px;
+      color: var(--fg);
+      caret-color: var(--accent);
+    }
+    #search-input::placeholder { color: var(--muted); }
+
+    #search-close {
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #search-results { overflow-y: auto; flex: 1; }
+
+    .s-row {
+      display: flex;
+      align-items: center;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .s-row:active { background: rgba(255,255,255,0.04); }
+    .s-row .col-t { font-size: 11px; color: var(--muted); width: 82px; flex-shrink: 0; }
+    .s-row .col-n { font-size: 13px; color: var(--fg); flex: 1; }
+    .s-row .col-n mark { background: none; color: var(--accent); }
+    .no-results { padding: 32px 24px; font-size: 12px; color: var(--muted); letter-spacing: 0.05em; }
+  </style>
+</head>
+<body>
+
+<div id="hero">
+  <h1>A CURATED<br>REPOSITORY<br>OF DESIGN&nbsp;&amp;<br>RESOURCES</h1>
+  <p class="byline">SELECTED REFERENCES BY <span class="red">MATHEUS ROCHA.</span></p>
+</div>
+
+<div id="sticky-top">
+  <div id="preview-wrap">
+    <div id="preview-inner">
+      <div id="preview-frame" class="loading">
+        <img class="pimg off" id="img-a" src="" alt="">
+        <img class="pimg off" id="img-b" src="" alt="">
+      </div>
+      <div id="preview-label"></div>
+    </div>
+  </div>
+  <div id="table-head">
+    <span class="col-t">type</span>
+    <span class="col-n">name</span>
+    <span id="search-btn">search</span>
+  </div>
+</div>
+
+<div id="rows-wrap"></div>
+<div id="spacer"></div>
+
+<div id="search-overlay">
+  <div id="search-bar">
+    <input id="search-input" type="search" placeholder="search references…"
+           autocomplete="off" autocorrect="off" spellcheck="false">
+    <span id="search-close">close</span>
+  </div>
+  <div id="search-results"></div>
+</div>
+
+<script>
+/* ── DATA ── */
+const LINKS = [
+  { type: 'agency',  name: 'work',            url: 'https://work.co' },
+  { type: '',        name: 'rga',             url: 'https://rga.com' },
+  { type: '',        name: 'portorocha',      url: 'https://portorocha.com' },
+  { type: '',        name: 'thefirstthelast', url: 'https://thefirstthelast.com' },
+  { type: 'brand',   name: 'brandstandards',  url: 'https://brandstandards.co' },
+  { type: 'gallery', name: 'deck',            url: 'https://deck.gallery' },
+  { type: '',        name: 'brandsite',       url: 'https://brandsite.gallery' },
+  { type: '',        name: 'rebrand',         url: 'https://rebrand.gallery' },
+  { type: '',        name: 'craftwork',       url: 'https://craftwork.design' },
+  { type: '',        name: 'footer',          url: 'https://footer.design' },
+  { type: '',        name: 'dark',            url: 'https://dark.design' },
+  { type: '',        name: 'landing',         url: 'https://landing.love' },
+  { type: '',        name: 'minimal',         url: 'https://minimal.gallery' },
+  { type: '',        name: 'httpster',        url: 'https://httpster.net' },
+  { type: '',        name: 'saaspo',          url: 'https://saaspo.com' },
+  { type: '',        name: 'lapa',            url: 'https://lapa.ninja' },
+  { type: '',        name: 'onepagelove',     url: 'https://onepagelove.com' },
+  { type: 'tools',   name: 'figma',           url: 'https://figma.com' },
+  { type: '',        name: 'framer',          url: 'https://framer.com' },
+  { type: '',        name: 'mobbin',          url: 'https://mobbin.com' },
+  { type: 'inspo',   name: 'awwwards',        url: 'https://awwwards.com' },
+  { type: '',        name: 'siteinspire',     url: 'https://siteinspire.com' },
+  { type: '',        name: 'godly',           url: 'https://godly.website' },
+];
+
+/* ── DOM ── */
+const hero          = document.getElementById('hero');
+const stickyTop     = document.getElementById('sticky-top');
+const previewWrap   = document.getElementById('preview-wrap');
+const previewFrame  = document.getElementById('preview-frame');
+const previewLabel  = document.getElementById('preview-label');
+const imgA          = document.getElementById('img-a');
+const imgB          = document.getElementById('img-b');
+const searchBtn     = document.getElementById('search-btn');
+const rowsWrap      = document.getElementById('rows-wrap');
+const spacerEl      = document.getElementById('spacer');
+const searchOverlay = document.getElementById('search-overlay');
+const searchInput   = document.getElementById('search-input');
+const searchResults = document.getElementById('search-results');
+const searchClose   = document.getElementById('search-close');
+
+/* ── BUILD ROWS ── */
+LINKS.forEach((link, i) => {
+  const div = document.createElement('div');
+  div.className = 'row';
+  div.dataset.index = i;
+  div.innerHTML =
+    `<span class="col-t">${link.type}</span>` +
+    `<span class="col-n">${link.name}</span>`;
+  div.addEventListener('click', () => window.open(link.url, '_blank', 'noopener'));
+  rowsWrap.appendChild(div);
+});
+
+const rows = Array.from(rowsWrap.querySelectorAll('.row'));
+
+/* ── SCREENSHOTS ── */
+const srcCache = {};
+function screenshotSrc(url) {
+  if (!srcCache[url])
+    srcCache[url] = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`;
+  return srcCache[url];
+}
+
+/* ── PREVIEW CROSSFADE ── */
+let currentIdx = -1;
+let frontIsA   = true;
+let shimmerTimer;
+
+function showPreview(idx) {
+  if (idx === currentIdx) return;
+  currentIdx = idx;
+
+  const link  = LINKS[idx];
+  const front = frontIsA ? imgA : imgB;
+  const back  = frontIsA ? imgB : imgA;
+  const src   = screenshotSrc(link.url);
+
+  previewLabel.textContent = link.url.replace(/^https?:\/\//, '');
+
+  if (back.dataset.loaded === src) { swapImgs(front, back); return; }
+
+  clearTimeout(shimmerTimer);
+  shimmerTimer = setTimeout(() => previewFrame.classList.add('loading'), 100);
+
+  back.dataset.loaded = src;
+  back.src = src;
+  back.onload = back.onerror = () => {
+    clearTimeout(shimmerTimer);
+    previewFrame.classList.remove('loading');
+    swapImgs(front, back);
+  };
+}
+
+function swapImgs(front, back) {
+  back.classList.replace('off', 'on');
+  front.classList.replace('on', 'off');
+  frontIsA = !frontIsA;
+}
+
+/* ── SPACER ──
+ * Allows the last row to scroll up to the first-visible position.
+ */
+function updateSpacer() {
+  const listViewH = window.innerHeight - stickyTop.offsetHeight;
+  spacerEl.style.height = Math.max(0, listViewH) + 'px';
+}
+
+/* ── ACTIVE ROW ──
+ * First row whose top edge is at/below the sticky panel bottom = active.
+ * Use -2px tolerance so row 0 is detected when it sits exactly at the boundary.
+ */
+function getFirstVisibleRow() {
+  const boundary = stickyTop.getBoundingClientRect().bottom - 2;
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].getBoundingClientRect().top >= boundary) return i;
+  }
+  return rows.length - 1;
+}
+
+function activateRow(idx) {
+  if (idx === currentIdx) return;
+  rows.forEach((r, i) => r.classList.toggle('active', i === idx));
+  showPreview(idx);
+}
+
+/* ── SNAP ENABLE / DISABLE ──
+ * Snap is OFF during the hero→preview transition so the animation stays fluid.
+ * It turns ON only after the preview is fully open and the layout is stable.
+ * scroll-padding-top = stickyTop height so each snapped row lands flush below
+ * the sticky panel.
+ */
+let snapEnabled = false;
+
+function enableSnap() {
+  if (snapEnabled) return;
+  snapEnabled = true;
+
+  /* lock scroll to row-0's exact snap position so momentum can't skip it */
+  const y = hero.offsetHeight;
+  if (window.scrollY > y + 1) window.scrollTo({ top: y, behavior: 'instant' });
+
+  document.documentElement.style.scrollPaddingTop = stickyTop.offsetHeight + 'px';
+  updateSpacer();
+
+  requestAnimationFrame(() => {
+    document.documentElement.classList.add('list-mode');
+    currentIdx = -1;
+    activateRow(getFirstVisibleRow());
+  });
+}
+
+function disableSnap() {
+  if (!snapEnabled) return;
+  snapEnabled = false;
+  document.documentElement.classList.remove('list-mode');
+  currentIdx = -1;
+  rows.forEach(r => r.classList.remove('active'));
+  spacerEl.style.height = '70dvh';
+}
+
+/* ── SCROLL ── */
+let previewOpen    = false;
+let targetPreviewH = 0;
+let raf            = null;
+
+function easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+function easeOut(t)   { return 1-(1-t)*(1-t); }
+
+function computePreviewTargetH() {
+  const frameW = window.innerWidth - 32;
+  return 14 + frameW * (9.8/16) + 8 + 20;
+}
+
+function onScroll() {
+  if (raf) return;
+  raf = requestAnimationFrame(tick);
+}
+
+function tick() {
+  raf = null;
+
+  const scrollY = window.scrollY;
+  const heroH   = hero.offsetHeight;
+
+  /* 0 → 1 over the full hero height */
+  const progress = Math.min(scrollY / heroH, 1);
+  const eased    = easeInOut(progress);
+
+  /* hero fade + lift (runs freely, no snap interference) */
+  hero.style.opacity   = String(Math.max(0, 1 - eased * 1.5));
+  hero.style.transform = `translateY(${-eased * 20}px)`;
+
+  if (progress > 0.2) {
+    /* open preview */
+    if (!previewOpen) {
+      previewOpen    = true;
+      targetPreviewH = computePreviewTargetH();
+      searchBtn.classList.add('show');
+    }
+    const pProg = Math.min((progress - 0.2) / 0.8, 1);
+    previewWrap.style.height = (easeOut(pProg) * targetPreviewH) + 'px';
+
+    /* enable snap only once preview is fully open and layout stable */
+    if (pProg >= 0.99) enableSnap();
+
+    /* in list-mode, track active row via getBoundingClientRect */
+    if (snapEnabled) activateRow(getFirstVisibleRow());
+
+  } else {
+    /* transition back to hero */
+    if (previewOpen) {
+      previewOpen = false;
+      searchBtn.classList.remove('show');
+    }
+    previewWrap.style.height = '0px';
+  }
+}
+
+window.addEventListener('scroll', onScroll, { passive: true });
+
+/* disable snap once the user scrolls back to the hero and settles */
+function onScrollEnd() {
+  if (snapEnabled && window.scrollY < hero.offsetHeight * 0.05) disableSnap();
+}
+window.addEventListener('scrollend', onScrollEnd, { passive: true });
+/* fallback for browsers without scrollend */
+let scrollEndTimer;
+window.addEventListener('scroll', () => {
+  clearTimeout(scrollEndTimer);
+  scrollEndTimer = setTimeout(onScrollEnd, 200);
+}, { passive: true });
+
+window.addEventListener('resize', () => {
+  targetPreviewH = computePreviewTargetH();
+  if (snapEnabled) {
+    document.documentElement.style.scrollPaddingTop = stickyTop.offsetHeight + 'px';
+    updateSpacer();
+  }
+}, { passive: true });
+
+/* ── SEARCH ── */
+searchBtn.addEventListener('click', () => {
+  searchOverlay.classList.add('open');
+  searchInput.value = '';
+  renderSearch('');
+  setTimeout(() => searchInput.focus(), 40);
+});
+
+searchClose.addEventListener('click', () => {
+  searchOverlay.classList.remove('open');
+  searchInput.blur();
+});
+
+searchInput.addEventListener('input', () => renderSearch(searchInput.value));
+searchInput.addEventListener('keydown', e => { if (e.key === 'Escape') searchClose.click(); });
+
+function renderSearch(q) {
+  const term = q.trim().toLowerCase();
+  const list = term
+    ? LINKS.filter(l => l.name.includes(term) || l.type.includes(term))
+    : LINKS;
+
+  searchResults.innerHTML = '';
+
+  if (!list.length) {
+    const d = document.createElement('div');
+    d.className = 'no-results';
+    d.textContent = 'no results.';
+    searchResults.appendChild(d);
+    return;
+  }
+
+  list.forEach(link => {
+    const div = document.createElement('div');
+    div.className = 's-row';
+    const hl = term
+      ? link.name.replace(new RegExp(`(${term})`, 'gi'), '<mark>$1</mark>')
+      : link.name;
+    div.innerHTML =
+      `<span class="col-t">${link.type}</span>` +
+      `<span class="col-n">${hl}</span>`;
+    div.addEventListener('click', () => {
+      window.open(link.url, '_blank', 'noopener');
+      searchClose.click();
+    });
+    searchResults.appendChild(div);
+  });
+}
+
+/* ── PRELOAD FIRST SCREENSHOT ── */
+window.addEventListener('load', () => {
+  syncSnapMargins();
+  const src = screenshotSrc(LINKS[0].url);
+  imgA.dataset.loaded = src;
+  imgA.src = src;
+  imgA.onload = imgA.onerror = () => {
+    clearTimeout(shimmerTimer);
+    previewFrame.classList.remove('loading');
+    imgA.classList.replace('off', 'on');
+    frontIsA = false;
+    previewLabel.textContent = LINKS[0].url.replace(/^https?:\/\//, '');
+  };
+});
+</script>
+</body>
+</html>
