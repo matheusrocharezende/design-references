@@ -45,13 +45,18 @@
     }
 
     #hero h1 {
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
       font-size: clamp(28px, 9.5vw, 42px);
       font-weight: 700;
       line-height: 0.98;
       text-transform: uppercase;
       letter-spacing: -0.025em;
       margin-bottom: 22px;
+    }
+
+    @media (max-width: 768px) {
+      #hero h1 {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      }
     }
 
     #hero .byline {
