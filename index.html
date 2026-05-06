@@ -2,607 +2,1106 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>References — Matheus Rocha</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --bg: #141414;
-      --fg: #f0f0f0;
-      --muted: rgba(240, 240, 240, 0.38);
-      --border: rgba(240, 240, 240, 0.09);
-      --accent: #e63c2f;
-      --font: 'IBM Plex Mono', ui-monospace, monospace;
-    }
+/* ═══════════════════════════════════════════════════════════
+   SHARED RESET
+═══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html {
-      background: var(--bg);
-      /* scroll-snap is OFF during the hero→preview transition;
-         JS adds .list-mode once the preview is fully open */
-    }
+/* By default show mobile, hide desktop */
+#desktop-app { display: none; }
+#mobile-app  { display: block; }
 
-    /* Snap only active in list mode */
-    html.list-mode { scroll-snap-type: y mandatory; }
+@media (min-width: 768px) {
+  #desktop-app { display: block; }
+  #mobile-app  { display: none; }
+}
 
-    body {
-      min-height: 100dvh;
-      background: var(--bg);
-      color: var(--fg);
-      font-family: var(--font);
-      -webkit-font-smoothing: antialiased;
-      overscroll-behavior-y: none;
-    }
 
-    /* ── HERO ── */
-    #hero {
-      padding: 44px 24px 36px;
-      will-change: opacity, transform;
-      /* snap point at scrollTop = 0 — used for the return trip (list → hero) */
-      scroll-snap-align: start;
-    }
+/* ═══════════════════════════════════════════════════════════
+   MOBILE STYLES  (<768px)
+═══════════════════════════════════════════════════════════ */
 
-    #hero h1 {
-      font-size: clamp(28px, 9.5vw, 42px);
-      font-weight: 700;
-      line-height: 0.98;
-      text-transform: uppercase;
-      letter-spacing: -0.025em;
-      margin-bottom: 22px;
-    }
+#mobile-app {
+  --bg: #141414;
+  --fg: #f0f0f0;
+  --muted: rgba(240, 240, 240, 0.38);
+  --border: rgba(240, 240, 240, 0.09);
+  --accent: #e63c2f;
+  --font: 'IBM Plex Mono', ui-monospace, monospace;
+}
 
-    #hero .byline {
-      font-size: 10px;
-      font-weight: 400;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-    #hero .byline .red { color: var(--accent); }
+html {
+  background: #141414;
+}
 
-    /* ── STICKY PANEL ── */
-    #sticky-top {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      background: var(--bg);
-    }
+/* Snap only active in list mode */
+html.list-mode { scroll-snap-type: y mandatory; }
 
-    /* ── PREVIEW ── */
-    #preview-wrap {
-      overflow: hidden;
-      height: 0; /* driven by JS */
-    }
+body {
+  min-height: 100dvh;
+  background: #141414;
+  color: #f0f0f0;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
 
-    #preview-inner {
-      padding: 14px 16px 8px;
-    }
+/* ── HERO ── */
+#hero {
+  padding: 44px 24px 36px;
+  will-change: opacity, transform;
+  scroll-snap-align: start;
+}
 
-    #preview-frame {
-      width: 100%;
-      aspect-ratio: 16 / 9.8;
-      border-radius: 7px;
-      overflow: hidden;
-      background: #1e1e1e;
-      position: relative;
-    }
+#hero h1 {
+  font-size: clamp(28px, 9.5vw, 42px);
+  font-weight: 700;
+  line-height: 0.98;
+  text-transform: uppercase;
+  letter-spacing: -0.025em;
+  margin-bottom: 22px;
+}
 
-    .pimg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: top center;
-      transition: opacity 0.4s ease;
-      will-change: opacity;
-    }
-    .pimg.off { opacity: 0; }
-    .pimg.on  { opacity: 1; }
+#hero .byline {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(240, 240, 240, 0.38);
+}
+#hero .byline .red { color: #e63c2f; }
 
-    #preview-frame::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg,
-        transparent 0%, rgba(255,255,255,0.035) 50%, transparent 100%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      opacity: 0;
-      transition: opacity 0.2s;
-      pointer-events: none;
-    }
-    #preview-frame.loading::after { opacity: 1; }
-    @keyframes shimmer {
-      from { background-position: -200% 0; }
-      to   { background-position:  200% 0; }
-    }
+/* ── STICKY PANEL ── */
+#sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #141414;
+}
 
-    #preview-label {
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 0.06em;
-      padding: 6px 0 0;
-      height: 20px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+/* ── PREVIEW ── */
+#preview-wrap {
+  overflow: hidden;
+  height: 0;
+}
 
-    /* ── TABLE HEADER ── */
-    #table-head {
-      display: flex;
-      align-items: center;
-      padding: 10px 24px;
-      border-bottom: 1px solid var(--border);
-    }
+#preview-inner {
+  padding: 14px 16px 8px;
+}
 
-    .col-t { width: 82px; flex-shrink: 0; }
-    .col-n { flex: 1; }
+#preview-frame {
+  width: 100%;
+  aspect-ratio: 16 / 9.8;
+  border-radius: 7px;
+  overflow: hidden;
+  background: #1e1e1e;
+  position: relative;
+}
 
-    #table-head .col-t,
-    #table-head .col-n {
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: 0.05em;
-    }
+.pimg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transition: opacity 0.4s ease;
+  will-change: opacity;
+}
+.pimg.off { opacity: 0; }
+.pimg.on  { opacity: 1; }
 
-    #search-btn {
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: 0.05em;
-      opacity: 0;
-      transition: opacity 0.35s ease;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    #search-btn.show { opacity: 1; }
+#preview-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    transparent 0%, rgba(255,255,255,0.035) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: mob-shimmer 1.5s infinite;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+#preview-frame.loading::after { opacity: 1; }
+@keyframes mob-shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
 
-    /* ── ROWS ──
-     * Each row is a snap point.
-     * scroll-margin-top is set by JS = stickyTop.offsetHeight,
-     * so snap position = row.offsetTop − stickyH = heroH + i×rowH (constant).
-     */
-    .row {
-      display: flex;
-      align-items: center;
-      padding: 11px 24px;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      scroll-snap-align: start;
-      scroll-snap-stop: always; /* one item per swipe */
-    }
+#preview-label {
+  font-size: 10px;
+  color: rgba(240, 240, 240, 0.38);
+  letter-spacing: 0.06em;
+  padding: 6px 0 0;
+  height: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-    .row .col-t {
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: 0.03em;
-      width: 82px;
-      flex-shrink: 0;
-    }
+/* ── TABLE HEADER ── */
+#table-head {
+  display: flex;
+  align-items: center;
+  padding: 10px 24px;
+  border-bottom: 1px solid rgba(240, 240, 240, 0.09);
+}
 
-    .row .col-n {
-      font-size: 13px;
-      color: rgba(240, 240, 240, 0.5);
-      transition: color 0.18s ease;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      flex: 1;
-    }
+.m-col-t { width: 82px; flex-shrink: 0; }
+.m-col-n { flex: 1; }
 
-    .row.active .col-n {
-      color: var(--fg);
-      font-weight: 500;
-    }
+#table-head .m-col-t,
+#table-head .m-col-n {
+  font-size: 11px;
+  color: rgba(240, 240, 240, 0.38);
+  letter-spacing: 0.05em;
+}
 
-    /* spacer sized dynamically so last row can snap to first-visible position */
-    #spacer { height: 70dvh; }
+#search-btn {
+  font-size: 11px;
+  color: rgba(240, 240, 240, 0.38);
+  letter-spacing: 0.05em;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#search-btn.show { opacity: 1; }
 
-    /* ── SEARCH OVERLAY ── */
-    #search-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.22s ease;
-    }
-    #search-overlay.open { opacity: 1; pointer-events: all; }
+/* ── ROWS ── */
+.row {
+  display: flex;
+  align-items: center;
+  padding: 11px 24px;
+  border-bottom: 1px solid rgba(240, 240, 240, 0.09);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
 
-    #search-bar {
-      display: flex;
-      align-items: center;
-      padding: 16px 24px;
-      border-bottom: 1px solid var(--border);
-      gap: 12px;
-    }
+.row .m-col-t {
+  font-size: 11px;
+  color: rgba(240, 240, 240, 0.38);
+  letter-spacing: 0.03em;
+  width: 82px;
+  flex-shrink: 0;
+}
 
-    #search-input {
-      flex: 1;
-      background: none;
-      border: none;
-      outline: none;
-      font-family: var(--font);
-      font-size: 14px;
-      color: var(--fg);
-      caret-color: var(--accent);
-    }
-    #search-input::placeholder { color: var(--muted); }
+.row .m-col-n {
+  font-size: 13px;
+  color: rgba(240, 240, 240, 0.5);
+  transition: color 0.18s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
 
-    #search-close {
-      font-size: 11px;
-      color: var(--muted);
-      cursor: pointer;
-      letter-spacing: 0.05em;
-      -webkit-tap-highlight-color: transparent;
-    }
+.row.active .m-col-n {
+  color: #f0f0f0;
+  font-weight: 500;
+}
 
-    #search-results { overflow-y: auto; flex: 1; }
+#spacer { height: 70dvh; }
 
-    .s-row {
-      display: flex;
-      align-items: center;
-      padding: 12px 24px;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .s-row:active { background: rgba(255,255,255,0.04); }
-    .s-row .col-t { font-size: 11px; color: var(--muted); width: 82px; flex-shrink: 0; }
-    .s-row .col-n { font-size: 13px; color: var(--fg); flex: 1; }
-    .s-row .col-n mark { background: none; color: var(--accent); }
-    .no-results { padding: 32px 24px; font-size: 12px; color: var(--muted); letter-spacing: 0.05em; }
+/* ── SEARCH OVERLAY ── */
+#search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: #141414;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+#search-overlay.open { opacity: 1; pointer-events: all; }
+
+#search-bar {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(240, 240, 240, 0.09);
+  gap: 12px;
+}
+
+#search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 14px;
+  color: #f0f0f0;
+  caret-color: #e63c2f;
+}
+#search-input::placeholder { color: rgba(240, 240, 240, 0.38); }
+
+#search-close {
+  font-size: 11px;
+  color: rgba(240, 240, 240, 0.38);
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#search-results { overflow-y: auto; flex: 1; }
+
+.s-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+  border-bottom: 1px solid rgba(240, 240, 240, 0.09);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.s-row:active { background: rgba(255,255,255,0.04); }
+.s-row .m-col-t { font-size: 11px; color: rgba(240, 240, 240, 0.38); width: 82px; flex-shrink: 0; }
+.s-row .m-col-n { font-size: 13px; color: #f0f0f0; flex: 1; }
+.s-row .m-col-n mark { background: none; color: #e63c2f; }
+.no-results { padding: 32px 24px; font-size: 12px; color: rgba(240, 240, 240, 0.38); letter-spacing: 0.05em; }
+
+
+/* ═══════════════════════════════════════════════════════════
+   DESKTOP STYLES  (≥768px)
+═══════════════════════════════════════════════════════════ */
+
+#desktop-app {
+  --bg: #141414;
+  --surface: #1c1c1c;
+  --border: #2a2a2a;
+  --text-primary: #d4d4d4;
+  --text-muted: #555;
+  --text-category: #444;
+  --text-description: #3a3a3a;
+  --accent: #d4d4d4;
+  --hover-bg: #1f1f1f;
+  --font: 'IBM Plex Mono', 'SF Mono', 'Fira Mono', 'Consolas', monospace;
+  --padding-x: 48px;
+  --type-col-w: 96px;
+
+  min-height: 100vh;
+  background: #141414;
+  color: #d4d4d4;
+  font-family: var(--font);
+  font-size: 12px;
+  line-height: 1;
+}
+
+@media (min-width: 1100px) {
+  #desktop-app {
+    --padding-x: 124px;
+    --type-col-w: 116px;
+  }
+}
+
+/* ── HERO ── */
+#desktop-app .d-hero {
+  width: 100%;
+  min-height: 38vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  margin-top: 232px;
+  padding-bottom: 40px;
+  padding-left: calc(var(--padding-x) + env(safe-area-inset-left, 0px));
+  padding-right: calc(var(--padding-x) + env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid var(--border);
+}
+
+#desktop-app .d-hero-title {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 900;
+  font-size: clamp(32px, 7.8vw, 130px);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  text-transform: uppercase;
+  text-wrap: pretty;
+  margin-bottom: 16px;
+}
+
+#desktop-app .d-hero-sub {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 700;
+  font-size: clamp(9px, 0.7vw, 12px);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+#desktop-app .d-hero-accent { color: #e02020; }
+
+/* ── CONTAINER ── */
+#desktop-app .d-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 60vh;
+  padding-left: calc(var(--padding-x) + env(safe-area-inset-left, 0px));
+  padding-right: calc(var(--padding-x) + env(safe-area-inset-right, 0px));
+}
+
+/* ── TOPBAR ── */
+#desktop-app .d-topbar {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 20px 0 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: #141414;
+  z-index: 10;
+}
+
+#desktop-app .d-sort-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  letter-spacing: 0.02em;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+#desktop-app .d-sort-btn.active { color: var(--text-primary); }
+#desktop-app .d-sort-btn:hover  { color: var(--text-primary); }
+
+#desktop-app .d-sort-btn.version {
+  width: 48px;
+  flex-shrink: 0;
+  text-align: left;
+  color: var(--text-primary);
+}
+@media (min-width: 1100px) {
+  #desktop-app .d-sort-btn.version { width: 68px; }
+}
+
+#desktop-app .d-sort-controls {
+  display: flex;
+  gap: 24px;
+  flex: 1;
+}
+
+#desktop-app .d-sort-btn .arrow {
+  display: inline-block;
+  transition: transform 0.2s;
+}
+#desktop-app .d-sort-btn.asc  .arrow { transform: rotate(0deg); }
+#desktop-app .d-sort-btn.desc .arrow { transform: rotate(180deg); }
+
+#desktop-app .d-search-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  letter-spacing: 0.02em;
+  transition: color 0.15s;
+  margin-left: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+#desktop-app .d-search-btn:hover { color: var(--text-primary); }
+
+/* ── SEARCH BAR ── */
+#desktop-app .d-search-bar {
+  display: none;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+#desktop-app .d-search-bar.open { display: block; }
+
+#desktop-app .d-search-bar input {
+  width: 100%;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: var(--font);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+#desktop-app .d-search-bar input::placeholder { color: var(--text-muted); }
+
+/* ── TABLE ── */
+#desktop-app .d-table-wrapper { flex: 1; }
+
+#desktop-app table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#desktop-app tbody tr {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+#desktop-app tbody tr:hover { background: var(--hover-bg); }
+
+#desktop-app td {
+  padding: 10px 0;
+  vertical-align: middle;
+  font-size: 14px;
+}
+
+#desktop-app .col-date,
+#desktop-app .col-name,
+#desktop-app .col-description {
+  border-bottom: 1px solid var(--border);
+}
+
+#desktop-app tr.group-end .col-category {
+  border-bottom: 1px solid var(--border);
+}
+
+#desktop-app .col-category {
+  display: table-cell;
+  color: var(--text-category);
+  font-size: 11px;
+  width: 80px;
+  padding-right: 16px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+@media (min-width: 1100px) {
+  #desktop-app .col-category { width: 100px; }
+}
+
+#desktop-app .col-date {
+  display: table-cell;
+  color: var(--text-muted);
+  width: 80px;
+  padding-right: 24px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+#desktop-app .col-name {
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+  padding-right: 32px;
+  width: 200px;
+}
+@media (min-width: 1100px) {
+  #desktop-app .col-name { width: 220px; }
+}
+
+#desktop-app .col-description {
+  display: table-cell;
+  color: var(--text-description);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (min-width: 1100px) {
+  #desktop-app .col-description { max-width: 340px; }
+}
+
+/* ── FLOATING PREVIEW ── */
+#desktop-app .d-preview {
+  position: fixed;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+#desktop-app .d-preview.visible { opacity: 1; }
+
+#desktop-app .d-preview img {
+  display: block;
+  width: 280px;
+  height: 200px;
+  object-fit: cover;
+}
+#desktop-app .d-preview.no-image img { display: none; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+
   </style>
 </head>
 <body>
 
-<div id="hero">
-  <h1>A CURATED<br>REPOSITORY<br>OF DESIGN&nbsp;&amp;<br>RESOURCES</h1>
-  <p class="byline">SELECTED REFERENCES BY <span class="red">MATHEUS ROCHA.</span></p>
-</div>
+<!-- ════════════════════════════════════════════
+     MOBILE APP
+════════════════════════════════════════════ -->
+<div id="mobile-app">
 
-<div id="sticky-top">
-  <div id="preview-wrap">
-    <div id="preview-inner">
-      <div id="preview-frame" class="loading">
-        <img class="pimg off" id="img-a" src="" alt="">
-        <img class="pimg off" id="img-b" src="" alt="">
+  <div id="hero">
+    <h1>A CURATED<br>REPOSITORY<br>OF DESIGN&nbsp;&amp;<br>RESOURCES</h1>
+    <p class="byline">SELECTED REFERENCES BY <span class="red">MATHEUS ROCHA.</span></p>
+  </div>
+
+  <div id="sticky-top">
+    <div id="preview-wrap">
+      <div id="preview-inner">
+        <div id="preview-frame" class="loading">
+          <img class="pimg off" id="img-a" src="" alt="">
+          <img class="pimg off" id="img-b" src="" alt="">
+        </div>
+        <div id="preview-label"></div>
       </div>
-      <div id="preview-label"></div>
+    </div>
+    <div id="table-head">
+      <span class="m-col-t">type</span>
+      <span class="m-col-n">name</span>
+      <span id="search-btn">search</span>
     </div>
   </div>
-  <div id="table-head">
-    <span class="col-t">type</span>
-    <span class="col-n">name</span>
-    <span id="search-btn">search</span>
-  </div>
-</div>
 
-<div id="rows-wrap"></div>
-<div id="spacer"></div>
+  <div id="rows-wrap"></div>
+  <div id="spacer"></div>
 
-<div id="search-overlay">
-  <div id="search-bar">
-    <input id="search-input" type="search" placeholder="search references…"
-           autocomplete="off" autocorrect="off" spellcheck="false">
-    <span id="search-close">close</span>
+  <div id="search-overlay">
+    <div id="search-bar">
+      <input id="search-input" type="search" placeholder="search references…"
+             autocomplete="off" autocorrect="off" spellcheck="false">
+      <span id="search-close">close</span>
+    </div>
+    <div id="search-results"></div>
   </div>
-  <div id="search-results"></div>
-</div>
+
+</div><!-- /#mobile-app -->
+
+
+<!-- ════════════════════════════════════════════
+     DESKTOP APP
+════════════════════════════════════════════ -->
+<div id="desktop-app">
+
+  <section class="d-hero">
+    <h1 class="d-hero-title">A CURATED REPOSITORY OF<br>DESIGN &amp; RESOURCES</h1>
+    <p class="d-hero-sub">SELECTED REFERENCES BY <span class="d-hero-accent">MATHEUS ROCHA.</span></p>
+  </section>
+
+  <div class="d-container">
+
+    <header class="d-topbar">
+      <button class="d-sort-btn version" data-sort="type">type</button>
+      <nav class="d-sort-controls">
+        <button class="d-sort-btn" data-sort="name">name</button>
+      </nav>
+      <button class="d-search-btn" id="d-searchToggle">search</button>
+    </header>
+
+    <div class="d-search-bar" id="d-searchBar">
+      <input type="text" id="d-searchInput" placeholder="search links…" autocomplete="off">
+    </div>
+
+    <main class="d-table-wrapper">
+      <table id="d-linksTable">
+        <tbody id="d-tableBody"></tbody>
+      </table>
+    </main>
+
+  </div>
+
+  <!-- Floating hover preview -->
+  <div class="d-preview" id="d-preview">
+    <img id="d-previewImg" src="" alt="preview">
+  </div>
+
+</div><!-- /#desktop-app -->
+
 
 <script>
-/* ── DATA ── */
-const LINKS = [
-  { type: 'agency',  name: 'work',            url: 'https://work.co' },
-  { type: '',        name: 'rga',             url: 'https://rga.com' },
-  { type: '',        name: 'portorocha',      url: 'https://portorocha.com' },
-  { type: '',        name: 'thefirstthelast', url: 'https://thefirstthelast.com' },
-  { type: 'brand',   name: 'brandstandards',  url: 'https://brandstandards.co' },
-  { type: 'gallery', name: 'deck',            url: 'https://deck.gallery' },
-  { type: '',        name: 'brandsite',       url: 'https://brandsite.gallery' },
-  { type: '',        name: 'rebrand',         url: 'https://rebrand.gallery' },
-  { type: '',        name: 'craftwork',       url: 'https://craftwork.design' },
-  { type: '',        name: 'footer',          url: 'https://footer.design' },
-  { type: '',        name: 'dark',            url: 'https://dark.design' },
-  { type: '',        name: 'landing',         url: 'https://landing.love' },
-  { type: '',        name: 'minimal',         url: 'https://minimal.gallery' },
-  { type: '',        name: 'httpster',        url: 'https://httpster.net' },
-  { type: '',        name: 'saaspo',          url: 'https://saaspo.com' },
-  { type: '',        name: 'lapa',            url: 'https://lapa.ninja' },
-  { type: '',        name: 'onepagelove',     url: 'https://onepagelove.com' },
-  { type: 'tools',   name: 'figma',           url: 'https://figma.com' },
-  { type: '',        name: 'framer',          url: 'https://framer.com' },
-  { type: '',        name: 'mobbin',          url: 'https://mobbin.com' },
-  { type: 'inspo',   name: 'awwwards',        url: 'https://awwwards.com' },
-  { type: '',        name: 'siteinspire',     url: 'https://siteinspire.com' },
-  { type: '',        name: 'godly',           url: 'https://godly.website' },
+/* ═══════════════════════════════════════════════════════════
+   SHARED DATA
+═══════════════════════════════════════════════════════════ */
+const DATA = [
+  { category: 'agency',   date: '03/2026', name: 'wearetwoo',                    url: 'https://wearetwoo.com/menu/',                         description: '' },
+  { category: 'agency',   date: '03/2026', name: 'work & co',                    url: 'https://work.co/',                                    description: '' },
+  { category: 'agency',   date: '03/2026', name: 'r/ga',                         url: 'https://rga.com/',                                    description: '' },
+  { category: 'studio',   date: '03/2026', name: 'porto rocha',                  url: 'https://portorocha.com/',                             description: '' },
+  { category: 'studio',   date: '03/2026', name: 'doc',                          url: 'https://www.doc.cc/',                                 description: '' },
+  { category: 'gallery',  date: '03/2026', name: 'deck gallery',                 url: 'https://www.deck.gallery/',                          description: '' },
+  { category: 'gallery',  date: '03/2026', name: 'brandsite design',             url: 'https://www.brandsite.design/index.html',             description: '' },
+  { category: 'brand',    date: '03/2026', name: 'herman miller brand standards',url: 'https://brandstandards.hermanmiller.com/who-we-are', description: '' },
+  { category: 'strategy', date: '03/2026', name: 'svpg',                         url: 'https://www.svpg.com/',                               description: '' },
 ];
 
-/* ── DOM ── */
-const hero          = document.getElementById('hero');
-const stickyTop     = document.getElementById('sticky-top');
-const previewWrap   = document.getElementById('preview-wrap');
-const previewFrame  = document.getElementById('preview-frame');
-const previewLabel  = document.getElementById('preview-label');
-const imgA          = document.getElementById('img-a');
-const imgB          = document.getElementById('img-b');
-const searchBtn     = document.getElementById('search-btn');
-const rowsWrap      = document.getElementById('rows-wrap');
-const spacerEl      = document.getElementById('spacer');
-const searchOverlay = document.getElementById('search-overlay');
-const searchInput   = document.getElementById('search-input');
-const searchResults = document.getElementById('search-results');
-const searchClose   = document.getElementById('search-close');
-
-/* ── BUILD ROWS ── */
-LINKS.forEach((link, i) => {
-  const div = document.createElement('div');
-  div.className = 'row';
-  div.dataset.index = i;
-  div.innerHTML =
-    `<span class="col-t">${link.type}</span>` +
-    `<span class="col-n">${link.name}</span>`;
-  div.addEventListener('click', () => window.open(link.url, '_blank', 'noopener'));
-  rowsWrap.appendChild(div);
-});
-
-const rows = Array.from(rowsWrap.querySelectorAll('.row'));
-
-/* ── SCREENSHOTS ── */
-const srcCache = {};
 function screenshotSrc(url) {
-  if (!srcCache[url])
-    srcCache[url] = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`;
-  return srcCache[url];
+  return `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`;
 }
 
-/* ── PREVIEW CROSSFADE ── */
-let currentIdx = -1;
-let frontIsA   = true;
-let shimmerTimer;
+/* ═══════════════════════════════════════════════════════════
+   MOBILE JS
+═══════════════════════════════════════════════════════════ */
+(function initMobile() {
+  if (window.innerWidth >= 768) return;
 
-function showPreview(idx) {
-  if (idx === currentIdx) return;
-  currentIdx = idx;
+  const LINKS = DATA.map(d => ({ type: d.category, name: d.name, url: d.url }));
 
-  const link  = LINKS[idx];
-  const front = frontIsA ? imgA : imgB;
-  const back  = frontIsA ? imgB : imgA;
-  const src   = screenshotSrc(link.url);
+  const hero          = document.getElementById('hero');
+  const stickyTop     = document.getElementById('sticky-top');
+  const previewWrap   = document.getElementById('preview-wrap');
+  const previewFrame  = document.getElementById('preview-frame');
+  const previewLabel  = document.getElementById('preview-label');
+  const imgA          = document.getElementById('img-a');
+  const imgB          = document.getElementById('img-b');
+  const searchBtn     = document.getElementById('search-btn');
+  const rowsWrap      = document.getElementById('rows-wrap');
+  const spacerEl      = document.getElementById('spacer');
+  const searchOverlay = document.getElementById('search-overlay');
+  const searchInput   = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+  const searchClose   = document.getElementById('search-close');
 
-  previewLabel.textContent = link.url.replace(/^https?:\/\//, '');
-
-  if (back.dataset.loaded === src) { swapImgs(front, back); return; }
-
-  clearTimeout(shimmerTimer);
-  shimmerTimer = setTimeout(() => previewFrame.classList.add('loading'), 100);
-
-  back.dataset.loaded = src;
-  back.src = src;
-  back.onload = back.onerror = () => {
-    clearTimeout(shimmerTimer);
-    previewFrame.classList.remove('loading');
-    swapImgs(front, back);
-  };
-}
-
-function swapImgs(front, back) {
-  back.classList.replace('off', 'on');
-  front.classList.replace('on', 'off');
-  frontIsA = !frontIsA;
-}
-
-/* ── SPACER ──
- * Allows the last row to scroll up to the first-visible position.
- */
-function updateSpacer() {
-  const listViewH = window.innerHeight - stickyTop.offsetHeight;
-  spacerEl.style.height = Math.max(0, listViewH) + 'px';
-}
-
-/* ── ACTIVE ROW ──
- * First row whose top edge is at/below the sticky panel bottom = active.
- * Use -2px tolerance so row 0 is detected when it sits exactly at the boundary.
- */
-function getFirstVisibleRow() {
-  const boundary = stickyTop.getBoundingClientRect().bottom - 2;
-  for (let i = 0; i < rows.length; i++) {
-    if (rows[i].getBoundingClientRect().top >= boundary) return i;
-  }
-  return rows.length - 1;
-}
-
-function activateRow(idx) {
-  if (idx === currentIdx) return;
-  rows.forEach((r, i) => r.classList.toggle('active', i === idx));
-  showPreview(idx);
-}
-
-/* ── SNAP ENABLE / DISABLE ──
- * Snap is OFF during the hero→preview transition so the animation stays fluid.
- * It turns ON only after the preview is fully open and the layout is stable.
- * scroll-padding-top = stickyTop height so each snapped row lands flush below
- * the sticky panel.
- */
-let snapEnabled = false;
-
-function enableSnap() {
-  if (snapEnabled) return;
-  snapEnabled = true;
-
-  /* lock scroll to row-0's exact snap position so momentum can't skip it */
-  const y = hero.offsetHeight;
-  if (window.scrollY > y + 1) window.scrollTo({ top: y, behavior: 'instant' });
-
-  document.documentElement.style.scrollPaddingTop = stickyTop.offsetHeight + 'px';
-  updateSpacer();
-
-  requestAnimationFrame(() => {
-    document.documentElement.classList.add('list-mode');
-    currentIdx = -1;
-    activateRow(getFirstVisibleRow());
-  });
-}
-
-function disableSnap() {
-  if (!snapEnabled) return;
-  snapEnabled = false;
-  document.documentElement.classList.remove('list-mode');
-  currentIdx = -1;
-  rows.forEach(r => r.classList.remove('active'));
-  spacerEl.style.height = '70dvh';
-}
-
-/* ── SCROLL ── */
-let previewOpen    = false;
-let targetPreviewH = 0;
-let raf            = null;
-
-function easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
-function easeOut(t)   { return 1-(1-t)*(1-t); }
-
-function computePreviewTargetH() {
-  const frameW = window.innerWidth - 32;
-  return 14 + frameW * (9.8/16) + 8 + 20;
-}
-
-function onScroll() {
-  if (raf) return;
-  raf = requestAnimationFrame(tick);
-}
-
-function tick() {
-  raf = null;
-
-  const scrollY = window.scrollY;
-  const heroH   = hero.offsetHeight;
-
-  /* 0 → 1 over the full hero height */
-  const progress = Math.min(scrollY / heroH, 1);
-  const eased    = easeInOut(progress);
-
-  /* hero fade + lift (runs freely, no snap interference) */
-  hero.style.opacity   = String(Math.max(0, 1 - eased * 1.5));
-  hero.style.transform = `translateY(${-eased * 20}px)`;
-
-  if (progress > 0.2) {
-    /* open preview */
-    if (!previewOpen) {
-      previewOpen    = true;
-      targetPreviewH = computePreviewTargetH();
-      searchBtn.classList.add('show');
-    }
-    const pProg = Math.min((progress - 0.2) / 0.8, 1);
-    previewWrap.style.height = (easeOut(pProg) * targetPreviewH) + 'px';
-
-    /* enable snap only once preview is fully open and layout stable */
-    if (pProg >= 0.99) enableSnap();
-
-    /* in list-mode, track active row via getBoundingClientRect */
-    if (snapEnabled) activateRow(getFirstVisibleRow());
-
-  } else {
-    /* transition back to hero */
-    if (previewOpen) {
-      previewOpen = false;
-      searchBtn.classList.remove('show');
-    }
-    previewWrap.style.height = '0px';
-  }
-}
-
-window.addEventListener('scroll', onScroll, { passive: true });
-
-/* disable snap once the user scrolls back to the hero and settles */
-function onScrollEnd() {
-  if (snapEnabled && window.scrollY < hero.offsetHeight * 0.05) disableSnap();
-}
-window.addEventListener('scrollend', onScrollEnd, { passive: true });
-/* fallback for browsers without scrollend */
-let scrollEndTimer;
-window.addEventListener('scroll', () => {
-  clearTimeout(scrollEndTimer);
-  scrollEndTimer = setTimeout(onScrollEnd, 200);
-}, { passive: true });
-
-window.addEventListener('resize', () => {
-  targetPreviewH = computePreviewTargetH();
-  if (snapEnabled) {
-    document.documentElement.style.scrollPaddingTop = stickyTop.offsetHeight + 'px';
-    updateSpacer();
-  }
-}, { passive: true });
-
-/* ── SEARCH ── */
-searchBtn.addEventListener('click', () => {
-  searchOverlay.classList.add('open');
-  searchInput.value = '';
-  renderSearch('');
-  setTimeout(() => searchInput.focus(), 40);
-});
-
-searchClose.addEventListener('click', () => {
-  searchOverlay.classList.remove('open');
-  searchInput.blur();
-});
-
-searchInput.addEventListener('input', () => renderSearch(searchInput.value));
-searchInput.addEventListener('keydown', e => { if (e.key === 'Escape') searchClose.click(); });
-
-function renderSearch(q) {
-  const term = q.trim().toLowerCase();
-  const list = term
-    ? LINKS.filter(l => l.name.includes(term) || l.type.includes(term))
-    : LINKS;
-
-  searchResults.innerHTML = '';
-
-  if (!list.length) {
-    const d = document.createElement('div');
-    d.className = 'no-results';
-    d.textContent = 'no results.';
-    searchResults.appendChild(d);
-    return;
-  }
-
-  list.forEach(link => {
+  /* ── BUILD ROWS ── */
+  LINKS.forEach((link, i) => {
     const div = document.createElement('div');
-    div.className = 's-row';
-    const hl = term
-      ? link.name.replace(new RegExp(`(${term})`, 'gi'), '<mark>$1</mark>')
-      : link.name;
+    div.className = 'row';
+    div.dataset.index = i;
     div.innerHTML =
-      `<span class="col-t">${link.type}</span>` +
-      `<span class="col-n">${hl}</span>`;
-    div.addEventListener('click', () => {
-      window.open(link.url, '_blank', 'noopener');
-      searchClose.click();
-    });
-    searchResults.appendChild(div);
+      `<span class="m-col-t">${link.type}</span>` +
+      `<span class="m-col-n">${link.name}</span>`;
+    div.addEventListener('click', () => window.open(link.url, '_blank', 'noopener'));
+    rowsWrap.appendChild(div);
   });
-}
 
-/* ── PRELOAD FIRST SCREENSHOT ── */
-window.addEventListener('load', () => {
-  syncSnapMargins();
-  const src = screenshotSrc(LINKS[0].url);
-  imgA.dataset.loaded = src;
-  imgA.src = src;
-  imgA.onload = imgA.onerror = () => {
+  const rows = Array.from(rowsWrap.querySelectorAll('.row'));
+
+  /* ── PREVIEW CROSSFADE ── */
+  let currentIdx = -1;
+  let frontIsA   = true;
+  let shimmerTimer;
+
+  function showPreview(idx) {
+    if (idx === currentIdx) return;
+    currentIdx = idx;
+
+    const link  = LINKS[idx];
+    const front = frontIsA ? imgA : imgB;
+    const back  = frontIsA ? imgB : imgA;
+    const src   = screenshotSrc(link.url);
+
+    previewLabel.textContent = link.url.replace(/^https?:\/\//, '');
+
+    if (back.dataset.loaded === src) { swapImgs(front, back); return; }
+
     clearTimeout(shimmerTimer);
-    previewFrame.classList.remove('loading');
-    imgA.classList.replace('off', 'on');
-    frontIsA = false;
-    previewLabel.textContent = LINKS[0].url.replace(/^https?:\/\//, '');
-  };
-});
+    shimmerTimer = setTimeout(() => previewFrame.classList.add('loading'), 100);
+
+    back.dataset.loaded = src;
+    back.src = src;
+    back.onload = back.onerror = () => {
+      clearTimeout(shimmerTimer);
+      previewFrame.classList.remove('loading');
+      swapImgs(front, back);
+    };
+  }
+
+  function swapImgs(front, back) {
+    back.classList.replace('off', 'on');
+    front.classList.replace('on', 'off');
+    frontIsA = !frontIsA;
+  }
+
+  /* ── SPACER ── */
+  function updateSpacer() {
+    const listViewH = window.innerHeight - stickyTop.offsetHeight;
+    spacerEl.style.height = Math.max(0, listViewH) + 'px';
+  }
+
+  /* ── SNAP MARGINS ── */
+  function syncSnapMargins() {
+    const h = stickyTop.offsetHeight;
+    rows.forEach(r => { r.style.scrollMarginTop = h + 'px'; });
+  }
+
+  /* ── ACTIVE ROW ── */
+  function getFirstVisibleRow() {
+    const boundary = stickyTop.getBoundingClientRect().bottom - 2;
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].getBoundingClientRect().top >= boundary) return i;
+    }
+    return rows.length - 1;
+  }
+
+  function activateRow(idx) {
+    if (idx === currentIdx) return;
+    rows.forEach((r, i) => r.classList.toggle('active', i === idx));
+    showPreview(idx);
+  }
+
+  /* ── SNAP ENABLE / DISABLE ── */
+  let snapEnabled = false;
+
+  function enableSnap() {
+    if (snapEnabled) return;
+    snapEnabled = true;
+
+    const y = hero.offsetHeight;
+    if (window.scrollY > y + 1) window.scrollTo({ top: y, behavior: 'instant' });
+
+    document.documentElement.style.scrollPaddingTop = stickyTop.offsetHeight + 'px';
+    syncSnapMargins();
+    updateSpacer();
+
+    requestAnimationFrame(() => {
+      document.documentElement.classList.add('list-mode');
+      currentIdx = -1;
+      activateRow(getFirstVisibleRow());
+    });
+  }
+
+  function disableSnap() {
+    if (!snapEnabled) return;
+    snapEnabled = false;
+    document.documentElement.classList.remove('list-mode');
+    currentIdx = -1;
+    rows.forEach(r => r.classList.remove('active'));
+    spacerEl.style.height = '70dvh';
+  }
+
+  /* ── SCROLL ── */
+  let previewOpen    = false;
+  let targetPreviewH = 0;
+  let raf            = null;
+
+  function easeInOut(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+  function easeOut(t)   { return 1-(1-t)*(1-t); }
+
+  function computePreviewTargetH() {
+    const frameW = window.innerWidth - 32;
+    return 14 + frameW * (9.8/16) + 8 + 20;
+  }
+
+  function onScroll() {
+    if (raf) return;
+    raf = requestAnimationFrame(tick);
+  }
+
+  function tick() {
+    raf = null;
+
+    const scrollY = window.scrollY;
+    const heroH   = hero.offsetHeight;
+    const progress = Math.min(scrollY / heroH, 1);
+    const eased    = easeInOut(progress);
+
+    hero.style.opacity   = String(Math.max(0, 1 - eased * 1.5));
+    hero.style.transform = `translateY(${-eased * 20}px)`;
+
+    if (progress > 0.2) {
+      if (!previewOpen) {
+        previewOpen    = true;
+        targetPreviewH = computePreviewTargetH();
+        searchBtn.classList.add('show');
+      }
+      const pProg = Math.min((progress - 0.2) / 0.8, 1);
+      previewWrap.style.height = (easeOut(pProg) * targetPreviewH) + 'px';
+
+      if (pProg >= 0.99) enableSnap();
+
+      if (snapEnabled) activateRow(getFirstVisibleRow());
+
+    } else {
+      if (previewOpen) {
+        previewOpen = false;
+        searchBtn.classList.remove('show');
+      }
+      previewWrap.style.height = '0px';
+    }
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  function onScrollEnd() {
+    if (snapEnabled && window.scrollY < hero.offsetHeight * 0.05) disableSnap();
+  }
+  window.addEventListener('scrollend', onScrollEnd, { passive: true });
+
+  let scrollEndTimer;
+  window.addEventListener('scroll', () => {
+    clearTimeout(scrollEndTimer);
+    scrollEndTimer = setTimeout(onScrollEnd, 200);
+  }, { passive: true });
+
+  window.addEventListener('resize', () => {
+    targetPreviewH = computePreviewTargetH();
+    if (snapEnabled) {
+      document.documentElement.style.scrollPaddingTop = stickyTop.offsetHeight + 'px';
+      syncSnapMargins();
+      updateSpacer();
+    }
+  }, { passive: true });
+
+  /* ── SEARCH ── */
+  searchBtn.addEventListener('click', () => {
+    searchOverlay.classList.add('open');
+    searchInput.value = '';
+    renderSearch('');
+    setTimeout(() => searchInput.focus(), 40);
+  });
+
+  searchClose.addEventListener('click', () => {
+    searchOverlay.classList.remove('open');
+    searchInput.blur();
+  });
+
+  searchInput.addEventListener('input', () => renderSearch(searchInput.value));
+  searchInput.addEventListener('keydown', e => { if (e.key === 'Escape') searchClose.click(); });
+
+  function renderSearch(q) {
+    const term = q.trim().toLowerCase();
+    const list = term
+      ? LINKS.filter(l => l.name.includes(term) || l.type.includes(term))
+      : LINKS;
+
+    searchResults.innerHTML = '';
+
+    if (!list.length) {
+      const d = document.createElement('div');
+      d.className = 'no-results';
+      d.textContent = 'no results.';
+      searchResults.appendChild(d);
+      return;
+    }
+
+    list.forEach(link => {
+      const div = document.createElement('div');
+      div.className = 's-row';
+      const hl = term
+        ? link.name.replace(new RegExp(`(${term})`, 'gi'), '<mark>$1</mark>')
+        : link.name;
+      div.innerHTML =
+        `<span class="m-col-t">${link.type}</span>` +
+        `<span class="m-col-n">${hl}</span>`;
+      div.addEventListener('click', () => {
+        window.open(link.url, '_blank', 'noopener');
+        searchClose.click();
+      });
+      searchResults.appendChild(div);
+    });
+  }
+
+  /* ── PRELOAD FIRST SCREENSHOT ── */
+  window.addEventListener('load', () => {
+    syncSnapMargins();
+    const src = screenshotSrc(LINKS[0].url);
+    imgA.dataset.loaded = src;
+    imgA.src = src;
+    imgA.onload = imgA.onerror = () => {
+      clearTimeout(shimmerTimer);
+      previewFrame.classList.remove('loading');
+      imgA.classList.replace('off', 'on');
+      frontIsA = false;
+      previewLabel.textContent = LINKS[0].url.replace(/^https?:\/\//, '');
+    };
+  });
+
+})(); /* end initMobile */
+
+
+/* ═══════════════════════════════════════════════════════════
+   DESKTOP JS
+═══════════════════════════════════════════════════════════ */
+(function initDesktop() {
+  if (window.innerWidth < 768) return;
+
+  const tableBody     = document.getElementById('d-tableBody');
+  const preview       = document.getElementById('d-preview');
+  const previewImg    = document.getElementById('d-previewImg');
+  const searchToggle  = document.getElementById('d-searchToggle');
+  const searchBar     = document.getElementById('d-searchBar');
+  const searchInput   = document.getElementById('d-searchInput');
+  const sortBtns      = document.querySelectorAll('#desktop-app .d-sort-btn');
+
+  let links    = DATA;
+  let sortField = 'type';
+  let sortDir   = 'asc';
+  let query     = '';
+  let mouseX    = 0, mouseY = 0;
+  let previewVisible = false;
+
+  /* ── Sort & filter ── */
+  function getFiltered() {
+    let result = [...links];
+
+    if (query) {
+      const q = query.toLowerCase();
+      result = result.filter(l =>
+        l.name.toLowerCase().includes(q) ||
+        l.category.toLowerCase().includes(q) ||
+        l.date.includes(q)
+      );
+    }
+
+    result.sort((a, b) => {
+      const catCmp = (a.category || '').localeCompare(b.category || '');
+      if (catCmp !== 0) return sortField === 'type' && sortDir === 'desc' ? -catCmp : catCmp;
+
+      if (sortField === 'name') {
+        const cmp = a.name.localeCompare(b.name);
+        return sortDir === 'asc' ? cmp : -cmp;
+      }
+      return 0;
+    });
+
+    return result;
+  }
+
+  /* ── Render ── */
+  function render() {
+    const rows = getFiltered();
+    tableBody.innerHTML = '';
+    let lastCategory = null;
+
+    rows.forEach((link, i) => {
+      const tr = document.createElement('tr');
+      const isGroupEnd = i === rows.length - 1 || rows[i + 1].category !== link.category;
+      if (isGroupEnd) tr.classList.add('group-end');
+
+      const categoryChanged = link.category !== lastCategory;
+      const tdCat = document.createElement('td');
+      tdCat.className = 'col-category';
+      if (categoryChanged) {
+        tdCat.textContent = link.category;
+        lastCategory = link.category;
+      }
+
+      const tdDate = document.createElement('td');
+      tdDate.className = 'col-date';
+      tdDate.textContent = link.date;
+
+      const tdName = document.createElement('td');
+      tdName.className = 'col-name';
+      tdName.textContent = link.name;
+
+      const tdDesc = document.createElement('td');
+      tdDesc.className = 'col-description';
+      tdDesc.textContent = link.description || '';
+
+      tr.appendChild(tdCat);
+      tr.appendChild(tdDate);
+      tr.appendChild(tdName);
+      tr.appendChild(tdDesc);
+
+      tr.dataset.url = link.url || '';
+
+      tr.addEventListener('mouseenter', () => showPreviewD(link));
+      tr.addEventListener('mouseleave', hidePreviewD);
+      tr.addEventListener('click', () => { if (link.url) window.open(link.url, '_blank'); });
+
+      tableBody.appendChild(tr);
+    });
+  }
+
+  /* ── Floating preview ── */
+  function showPreviewD(link) {
+    const src = link.preview || (link.url ? screenshotSrc(link.url) : '');
+    if (src) {
+      previewImg.src = src;
+      preview.classList.remove('no-image');
+      previewImg.style.display = 'block';
+    } else {
+      preview.classList.add('no-image');
+      previewImg.style.display = 'none';
+    }
+    preview.classList.add('visible');
+    previewVisible = true;
+    positionPreview();
+  }
+
+  function hidePreviewD() {
+    preview.classList.remove('visible');
+    previewVisible = false;
+  }
+
+  function positionPreview() {
+    const pw = 280, ph = 200, margin = 20;
+    const vh = window.innerHeight;
+    const x = mouseX + margin;
+    let y = mouseY - ph / 2;
+    if (y < margin) y = margin;
+    if (y + ph > vh - margin) y = vh - ph - margin;
+    preview.style.left = x + 'px';
+    preview.style.top  = y + 'px';
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    if (previewVisible) positionPreview();
+  });
+
+  /* ── Sort ── */
+  function updateSortUI() {
+    sortBtns.forEach(b => {
+      b.classList.remove('active', 'asc', 'desc');
+      const arrow = b.querySelector('.arrow');
+      if (arrow) arrow.remove();
+    });
+    const activeBtn = document.querySelector(`#desktop-app .d-sort-btn[data-sort="${sortField}"]`);
+    if (activeBtn) {
+      activeBtn.classList.add('active', sortDir);
+      const arrow = document.createElement('span');
+      arrow.className = 'arrow';
+      arrow.textContent = sortDir === 'asc' ? ' ↑' : ' ↓';
+      activeBtn.appendChild(arrow);
+    }
+  }
+
+  sortBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const field = btn.dataset.sort;
+      if (sortField === field) {
+        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortField = field;
+        sortDir = 'asc';
+      }
+      updateSortUI();
+      render();
+    });
+  });
+
+  updateSortUI();
+
+  /* ── Search ── */
+  searchToggle.addEventListener('click', () => {
+    searchBar.classList.toggle('open');
+    if (searchBar.classList.contains('open')) {
+      searchInput.focus();
+    } else {
+      searchInput.value = '';
+      query = '';
+      render();
+    }
+  });
+
+  searchInput.addEventListener('input', (e) => {
+    query = e.target.value.trim();
+    render();
+  });
+
+  /* ── Init ── */
+  render();
+
+})(); /* end initDesktop */
+
 </script>
 </body>
 </html>
